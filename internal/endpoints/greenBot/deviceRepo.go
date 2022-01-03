@@ -20,6 +20,23 @@ type deviceRepo struct {
 	store *datastore.MongoDataStore
 }
 
+func (r *deviceRepo) FindAll(ctx context.Context) ([]models.Device, error) {
+	var greenDevs []models.Device
+	curr, err := r.store.DB.Collection(deviceCollection).Find(ctx, bson.D{{}})
+	if err != nil {
+		return nil, err
+	}
+	for curr.Next(ctx) {
+		var greenDev models.Device
+		err := curr.Decode(&greenDev)
+		if err != nil {
+			return nil, err
+		}
+		greenDevs = append(greenDevs, greenDev)
+	}
+	return greenDevs, nil
+}
+
 func (r *deviceRepo) Find(ctx context.Context, id primitive.ObjectID) (*models.Device, error) {
 	var greenDev models.Device
 	err := r.store.DB.Collection(deviceCollection).FindOne(ctx, bson.M{"_id": id}).Decode(&greenDev)

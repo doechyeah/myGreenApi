@@ -30,9 +30,13 @@ func NewGreenDevice(store *datastore.MongoDataStore) GreenDevice {
 }
 
 func (gdev GreenDevice) Devices(w http.ResponseWriter, req *http.Request) {
-	// TEMP
-	log.Print("RETURN ALL DEVICES")
-	io.WriteString(w, "RETURN ALL DEVICES")
+	w.Header().Set("Content-Type", "application/json")
+	devs, err := gdev.devRepo.FindAll(context.TODO())
+	if err != nil {
+		log.Fatalf("Error Occurred getting All Devices: %v", err)
+	}
+
+	json.NewEncoder(w).Encode(&devs)
 }
 
 func (gdev GreenDevice) DeviceInfo(w http.ResponseWriter, req *http.Request) {

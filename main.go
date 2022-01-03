@@ -25,9 +25,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		pingOut = "SUCCESS"
 	} else {
-		pingOut = "FAILED"
+		pingOut = "FAILED: " + err.Error()
 	}
-	io.WriteString(w, "Welcome to the GreenAPI!~\nMONGODB Connection:"+pingOut)
+	io.WriteString(w, "Welcome to the GreenAPI!~\nMONGODB Connection: "+pingOut)
 }
 
 // func checkDev(w http.ResponseWriter, r *http.Request) {
@@ -50,18 +50,7 @@ func main() {
 
 	mongoDS = datastore.NewDatastore(config)
 	defer mongoDS.Session.Disconnect(context.Background())
-	// client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer func() {
-	// 	if err := client.Disconnect(context.TODO()); err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
-
-	// http.HandleFunc("/checkDev", checkDev)
-	// TODO: start HTTP server here
+	// Start HTTP Server
 	apiRouter := mux.NewRouter()
 	apiRouter.HandleFunc("/", index)
 	endpoints.StartDeviceHandlers(apiRouter, mongoDS)
