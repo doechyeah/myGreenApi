@@ -46,7 +46,6 @@ func (gdev GreenDevice) DeviceInfo(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	// string to primitive.ObjectID
 	id, _ := primitive.ObjectIDFromHex(params["id"])
-	log.Printf("Device ID Being Asked: %v", id)
 	dev, err := gdev.devRepo.Find(context.TODO(), id)
 	if err != nil {
 		log.Fatalf("Error Occurred when reading collection: %v", err)
@@ -56,8 +55,12 @@ func (gdev GreenDevice) DeviceInfo(w http.ResponseWriter, req *http.Request) {
 }
 
 func (gdev GreenDevice) Create(w http.ResponseWriter, req *http.Request) {
-	// TEMP
-	io.WriteString(w, "CREATE NEW DEVICE")
+	if req.Header.Get("Content-Type") != "application/json" {
+		io.WriteString(w, "Content Type is not application/json")
+		return
+	}
+	// RECEIVES: USERID, HUMIDITY, TEMPERATURE.
+	// var newDev models.Device
 }
 
 func (gdev GreenDevice) Delete(w http.ResponseWriter, req *http.Request) {

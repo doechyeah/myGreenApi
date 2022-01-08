@@ -48,3 +48,8 @@ func (r *deviceRepo) Find(ctx context.Context, id primitive.ObjectID) (*models.D
 	}
 	return &greenDev, nil
 }
+
+func (r *deviceRepo) Create(ctx context.Context, params map[string]string) (*models.Device, error) {
+	var greenDev models.Device
+	return &greenDev, nil
+}
