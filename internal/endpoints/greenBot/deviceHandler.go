@@ -60,7 +60,15 @@ func (gdev GreenDevice) Create(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	// RECEIVES: USERID, HUMIDITY, TEMPERATURE.
-	// var newDev models.Device
+	params := mux.Vars(req)
+	result, err := gdev.devRepo.Create(context.TODO(), params)
+	if err != nil {
+		log.Fatalf("Error Occurred when creating collection: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&result)
 }
 
 func (gdev GreenDevice) Delete(w http.ResponseWriter, req *http.Request) {

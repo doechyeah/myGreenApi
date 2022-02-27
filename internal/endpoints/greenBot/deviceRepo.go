@@ -2,8 +2,10 @@ package greenBot
 
 import (
 	"context"
+	"errors"
 	"myGreenApi/internal/datastore"
 	"myGreenApi/internal/models"
+	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,9 +14,9 @@ import (
 
 var deviceCollection string = "Devices"
 
-type DeviceRepo interface {
-	Find(ctx context.Context, id primitive.ObjectID) (*models.Device, error)
-}
+// type DeviceRepo interface {
+// 	Find(ctx context.Context, id primitive.ObjectID) (*models.Device, error)
+// }
 
 type deviceRepo struct {
 	store *datastore.MongoDataStore
@@ -40,16 +42,39 @@ func (r *deviceRepo) FindAll(ctx context.Context) ([]models.Device, error) {
 func (r *deviceRepo) Find(ctx context.Context, id primitive.ObjectID) (*models.Device, error) {
 	var greenDev models.Device
 	err := r.store.DB.Collection(deviceCollection).FindOne(ctx, bson.M{"_id": id}).Decode(&greenDev)
-	if err != nil {
-		return nil, err
-	}
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	return &greenDev, nil
 }
 
-func (r *deviceRepo) Create(ctx context.Context, params map[string]string) (*models.Device, error) {
-	var greenDev models.Device
-	return &greenDev, nil
+func (r *deviceRepo) Create(ctx context.Context, params map[string]string) (*mongo.InsertOneResult, error) {
+	if params["UserID"] == "" {
+		return nil, errors.New("No UserID Provided")
+	}
+	userID, err := primitive.ObjectIDFromHex(params["UserID"])
+	if err != nil {
+		return nil, err
+	}
+	humidity, err := strconv.Atoi(params["humidity"])
+	if err != nil {
+		return nil, err
+	}
+	temp, err := strconv.Atoi(params["temperature"])
+	if err != nil {
+		return nil, err
+	}
+	greenDev := models.Device{
+		HumidityLevel: humidity,
+		Temperature:   temp,
+		UserID:        userID,
+	}
+	result, err := r.store.DB.Collection(deviceCollection).InsertOne(ctx, &greenDev)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
