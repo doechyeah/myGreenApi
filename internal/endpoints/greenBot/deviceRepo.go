@@ -2,21 +2,15 @@ package greenBot
 
 import (
 	"context"
-	"errors"
 	"myGreenApi/internal/datastore"
 	"myGreenApi/internal/models"
-	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var deviceCollection string = "Devices"
-
-// type DeviceRepo interface {
-// 	Find(ctx context.Context, id primitive.ObjectID) (*models.Device, error)
-// }
+const deviceCollection = "Devices"
 
 type deviceRepo struct {
 	store *datastore.MongoDataStore
@@ -51,28 +45,24 @@ func (r *deviceRepo) Find(ctx context.Context, id primitive.ObjectID) (*models.D
 	return &greenDev, nil
 }
 
-func (r *deviceRepo) Create(ctx context.Context, params map[string]string) (*mongo.InsertOneResult, error) {
-	if params["UserID"] == "" {
-		return nil, errors.New("No UserID Provided")
-	}
-	userID, err := primitive.ObjectIDFromHex(params["UserID"])
-	if err != nil {
-		return nil, err
-	}
-	humidity, err := strconv.Atoi(params["humidity"])
-	if err != nil {
-		return nil, err
-	}
-	temp, err := strconv.Atoi(params["temperature"])
-	if err != nil {
-		return nil, err
-	}
-	greenDev := models.Device{
-		HumidityLevel: humidity,
-		Temperature:   temp,
-		UserID:        userID,
-	}
+func (r *deviceRepo) Create(ctx context.Context, greenDev *models.Device) (*mongo.InsertOneResult, error) {
 	result, err := r.store.DB.Collection(deviceCollection).InsertOne(ctx, &greenDev)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (r *deviceRepo) Delete(ctx context.Context, userID primitive.ObjectID) (*mongo.DeleteResult, error) {
+	result, err := r.store.DB.Collection(deviceCollection).DeleteOne(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (r *deviceRepo) Update(ctx context.Context, greenDev *models.Device) (*mongo.UpdateResult, error) {
+	result, err := r.store.DB.Collection(deviceCollection).UpdateByID(ctx, greenDev.ID, greenDev)
 	if err != nil {
 		return nil, err
 	}
